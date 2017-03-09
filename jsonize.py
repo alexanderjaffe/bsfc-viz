@@ -17,7 +17,6 @@ def trim_category(field):
 
 # change dates to midnight for aggregation
 def midnight(date):
-    
     try:
         d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
     except:
@@ -45,7 +44,7 @@ def main():
         "store_use":"sum", "spoilage":"sum","food_prep":"sum", "committee":"sum", \
         "member_discount_applied":"sum"})
     # write to json
-    items_grouped.to_json("items.json", orient="records")
+    items_grouped.to_json("data/items.json", orient="records")
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Homework 3 - MyWorld Data</title>
+
+    <!-- ADD Libraries-->
+    <script src="libs/d3/d3.min.js" charset="utf-8"></script>
+    <script src="libs/jquery/jquery-2.1.1.min.js" charset="utf-8"></script>
+    <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+
+    <!--Stylesheets-->
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
+
+    <!-- Get some nice font-->
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+
+
+    <!--------------------------------->
+    <!-- FROM HERE ON IT IS HW3 stuff-->
+    <!--------------------------------->
+
+    <!-- add own vis classes-->
+    <script src = "js/priovis.js"></script>
+    <script src = "js/agevis.js"></script>
+    <script src = "js/countvis.js"></script>
+
+    <!-- add own stylesheet-->
+    <link rel="stylesheet" type="text/css" href="css/myStyle.css">
+
+</head>
+<body>
+    <div class="container">
+        <h1>Homework 3 - MyWorld 2015 Data Visualization</h1>
+
+        <div class="row">
+            <div class="col-md-8 col-sm-12">
+               <p> The following visualization shows you the votes for MyWorld 2015. You can select a time range to see changes in the distribution of votes und distribution of age of the voters.</p>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-md-2">
+                <!-- <button class="btn btn-sm btn-primary" id="fitInBtn"> <span class="glyphicon glyphicon-resize-horizontal"></span> reset zoom </button> -->
+            </div>
+
+            <div class="col-md-8" style = "width:300px">
+                <b>current brush:</b> <span id="brushInfo"></span>
+            </div>
+            <div id = "mode">
+              <form>
+              Mode:
+                <select>
+                  <option value="default" selected >Default</option>
+                  <option value="avg">Design Studio</option>
+                </select>
+              </form>
+            </div>
+
+
+        </div>
+
+
+
+        <div class="row">
+            <div class="col-md-9" id="countVis">
+            </div>
+            <div class="col-md-3" id="ageVis">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12" id="prioVis">
+            </div>
+
+        </div>
+
+
+
+
+
+
+    </div>
+
+
+
+    <script>
+        $(function(){ // this function is called after the HTML document is fully loaded
+
+
+            //==========================================
+            //--- HERE IS WHERE ALL THE MAGIC STARTS --
+            //==========================================
+
+
+            // variables keeping global knowledge of the data
+            var allData = [];
+            var metaData = {};
+            var MyEventHandler;
+
+            // this function can convert Date objects to a string
+            // it can also convert strings to Date objects
+            // see: https://github.com/mbostock/d3/wiki/Time-Formatting
+            var dateFormatter = d3.time.format("%Y-%m-%d");
+
+
+            // call this function after Data is loaded, reformatted and bound to the variables
+            var initVis = function(){
+
+                MyEventHandler = new Object();
+
+                // add in visualizations
+                var count_vis = new CountVis(d3.select("#countVis"), allData, metaData, MyEventHandler, "default");
+                var age_vis = new AgeVis(d3.select("#ageVis"), allData, metaData);
+                var prio_vis = new PrioVis(d3.select("#prioVis"), allData, metaData,"default");
+
+
+                // TODO: bind the eventHandler to the Vis Objects
+                // events will be created from the CountVis object (nothing to do here)
+                // events will be consumed by the PrioVis and AgeVis object (binding should happen here)
+                $(MyEventHandler).bind("selectionChanged", function(event, pass){
+                    age_vis.onSelectionChange(pass);
+                    prio_vis.onSelectionChange(pass);
+
+                    // update brush text
+                    start = dateFormatter(pass["start"]);
+                    end = dateFormatter(pass["end"]);
+                    d3.select("#brushInfo").selectAll("text").remove()
+                    d3.select("#brushInfo").append("text").text(start + " to " + end)
+                });
+
+                /* $(MyEventHandler).bind("brushEmpty", function(event){
+                    console.log("hoo");
+                    d3.select("#prioVis").style("visibility", "hidden")
+                }) */
+
+            }
+
+            // call this function after both files are loaded -- error should be "null" if no error
+            var dataLoaded = function (error, _allData, _metaData, _spectra) {
+
+                if (!error) {
+
+                    // make our data look nicer and more useful:
+                    // per Day we want to have an object looking like this:
+                    /*
+                    * {
+                    *   time: .. (should be a Date object)
+                    *   count: .. (number of all votes)
+                    *   prios: [..,..,..,...] (array of number of votes per priority -> array length =16)
+                    *   ages: [..,..,..,..] (array counts of votes per age 0-99)
+                    *
+                    * */
+                    console.log(_spectra);
+                    allData = _allData.map(function (d) {
+                                var res = {
+                                    time: dateFormatter.parse(d.day),
+                                    count: parseInt(d["count(*)"])
+                                };
+
+                                keys_nos = d3.range(0,16)
+                                // generate names of keys
+                                keys_name = [] 
+                                keys_nos.map(function(k){keys_name.push("sum(p" + k + ")")})
+                                // get priority counts
+                                res.prios = []
+                                keys_name.map(function(l){res.prios.push(d[l])})
+
+                                // This is ONE way to create an array of length 100
+                                // and set every value to "0")
+                                res.ages = d3.range(0,100). map(function(){return 0;})
+
+                                // for each age object write over res.ages 0
+                                d.age.forEach(function(k,i){
+                                    // remove weird stuff
+                                    if (k.age > 99 || k.age == ""){}
+                                    else {
+                                        res.ages[k.age] = k["count(*)"]
+                                    }
+                                })
+
+                                return res;
+                            }
+                    )
+
+                    metaData = _metaData;
+                    //console.log(allData);
+                    initVis();
+                }
+            }
+
+            var startHere = function(){
+
+            // load datasets with queue.js
+            // help from https://github.com/mbostock/queue
+            queue()
+                .defer(d3.json, 'data/perDayData.json')
+                .defer(d3.json, 'data/MYWorld_fields.json')
+                .defer(d3.json, 'scripts/mzXML.json')
+                .await(function(error,file1,file2, file3){dataLoaded(error,file1,file2, file3)});
+
+                // bind reset zoom button to a function (-- ONLY FOR BONUS --)
+                d3.select("#fitInBtn").on("click", function() {
+                    // TODO: -- ONLY FOR BONUS --
+                });
+
+
+            }
+
+            // define behavior on changing mode
+            d3.select("#mode").select("select").on("change", function(){
+                mode_id = d3.select(this).property("value")
+                // get rid of old count vis - need to remove existing brush if any
+                d3.select("#countVis").select("svg").remove();
+                var count_vis = new CountVis(d3.select("#countVis"), allData, metaData, MyEventHandler, mode_id);
+                // get rid of old prio vis
+                d3.select("#prioVis").select("svg").remove();
+                // add in new prio vis
+                var prio_vis = new PrioVis(d3.select("#prioVis"), allData, metaData, mode_id);
+                // hide priovis on initialization of avg mode
+                if (mode_id == "avg"){d3.select("#prioVis").style("visibility", "hidden") 
+                }
+                // else add it back
+                else {d3.select("#prioVis").style("visibility", "visible")}
+                //rebind event handler
+                $(MyEventHandler).bind("selectionChanged", function(event, pass){
+                    prio_vis.onSelectionChange(pass);
+                })
+            });
+
+            startHere();
+
+        })
+    </script>
+</body>
+</html>

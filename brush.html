@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Homework 3 - Tasks 2a and 2b</title>
+
+    <!-- ADD Libraries-->
+    <script src="libs/d3/d3.min.js" charset="utf-8"></script>
+    <script src="libs/jquery/jquery-2.1.1.min.js" charset="utf-8"></script>
+    <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+    <script src="http://hs8.de/cs171_tests/tester.js"></script>
+
+    <!--Stylesheets-->
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
+
+    <!-- Get some nice font-->
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+</head>
+<body>
+<script>
+
+var margin = {top: 50, bottom: 10, left: 10, right: 10};
+var width = 1000- margin.left - margin.right;
+var height = 1500 - margin.top - margin.bottom;
+var svg = d3.select("body").append("svg")
+  .attr("width", width+margin.left+margin.right)
+  .attr("height", height+margin.top+margin.bottom)
+  .append("g")
+  .attr("transform", "translate("+margin.left+","+margin.top+")");
+
+var visScale = d3.time.scale().domain([new Date("2014/12/3"), new Date("2014/12/12")]).range([0,500])
+var brush = d3.svg.brush().x(visScale).on("brush", console.log("hi"));
+
+svg.append("g").attr("class", "brush").call(brush)
+  .selectAll("rect").attr({
+    height: height
+});
+
+</script>
+

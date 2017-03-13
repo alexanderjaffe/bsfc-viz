@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Mass Spec Viz</title>
+    <title>BSFC Data</title>
 
     <!-- ADD Libraries-->
     <script src="libs/d3/d3.min.js" charset="utf-8"></script>
@@ -27,11 +27,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>Mass Spec Visualization</h1>
+        <h1>BSFC Data Portal</h1>
 
         <div class="row">
             <div class="col-md-8 col-sm-12">
-               <p> Analyze chemical data! </p>
+               <p> Analyze sales data! </p>
             </div>
         </div>
         <div class="row">
@@ -62,11 +62,15 @@
         </div>
         <br>
         <div class="row">
-            <div class="col-md-3" id="ageVis">
+            <div class="col-md-12" id="salesVis">
+            </div>
+        </div>
+         <div class="row">
+            <div class="col-md-12" id="timeVis">
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12" id="prioVis">
+            <div class="col-md-12" id="treeVis">
             </div>
         </div>
     </div>
@@ -76,7 +80,6 @@
 
             // variables keeping global knowledge of the data
             var allData = [];
-            var metaData = {};
             var MyEventHandler;
 
             // this function can convert Date objects to a string
@@ -91,7 +94,7 @@
 
                 // add in visualizations
                 /*var count_vis = new CountVis(d3.select("#countVis"), allData, metaData, MyEventHandler, "default"); */
-                var age_vis = new HeatMap(d3.select("#ageVis"), allData, metaData);
+                var time_vis = new HeatMap(d3.select("#ageVis"), allData, metaData, MyEventHandler);
                 /*var prio_vis = new PrioVis(d3.select("#prioVis"), allData, metaData,"default"); */
 
                 // TODO: bind the eventHandler to the Vis Objects
@@ -119,20 +122,17 @@
             }
 
             // call this function after both files are loaded -- error should be "null" if no error
-            var dataLoaded = function (error, _allData, _metaData, _spectra) {
+            var dataLoaded = function (error, _allData) {
 
                 if (!error) {
 
-                    console.log(_spectra);
-                    
-                    /*allData = _allData.map(function(d){
-                    }) */
-                    
-                    allData = _spectra
-                    metaData = _metaData;
-                    //console.log(allData);
+                    console.log("started")
+                    console.log(_allData);
+                    allData = _allData
                     initVis();
                 }
+
+                else{console.log(error)}
             }
 
             var startHere = function(){
@@ -140,10 +140,8 @@
             // load datasets with queue.js
             // help from https://github.com/mbostock/queue
             queue()
-                .defer(d3.json, 'data/perDayData.json')
-                .defer(d3.json, 'data/MYWorld_fields.json')
-                .defer(d3.tsv, 'data/data_heatmap.tsv')
-                .await(function(error,file1,file2, file3){dataLoaded(error,file1,file2, file3)});
+                .defer(d3.json, 'data/items.json')
+                .await(function(error,file1){dataLoaded(error,file1)});
             }
 
             // define behavior on changing mode

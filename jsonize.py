@@ -37,25 +37,14 @@ def trim_category(field):
         temp = field.replace(" [Cashier Code: - ]", "")
         return temp.replace(" [Cashier Code: ' ]", "")
 
-def assign_subcat(row):
+def assign_subcat(name, subcats):
 
-    if row["brand"] in ["Upton's","Beyond Meat","Field Roast"]:
-        return "Meat Substitutes"
-    elif row["brand"] in ["Columbia Gorge", "Forager"]:
-        return "Juice"
-    elif row["brand"] in ["NewTree", "Alter Eco"]:
-        return "Chocolate"
-    elif row["brand"] in ["Equal Exchange"] or "Yerba Mate" in row["new_name"]:
-        return "Tea"
-    elif "Cold Brew" in row["new_name"] or "Coffee," in row["new_name"]:
-        return "Coffee"
-    elif "Kombucha" in row["new_name"] or row["brand"] in ["GT's"]:
-        return "Kombucha"
-    elif "Yogurt" in row["new_name"]:
-        return "Yogurt"
-    elif "Onions" in row["new_name"]:
-        return "Onions"
-    else: return None
+    try:
+        if subcats[name] == "":
+            return None
+        else: return subcats[name]
+    except:
+        return None
 
 def assign_brand(field, brands):
 
@@ -71,6 +60,7 @@ def assign_brand(field, brands):
 
 # change dates to midnight for aggregation
 def midnight(date):
+    
     try:
         d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
     except:
@@ -84,14 +74,21 @@ def main():
             created_at FROM item_item INNER JOIN cost_cost ON item_item.cost_id = cost_cost.id \
             INNER JOIN revenue_revenue ON item_item.revenue_id = revenue_revenue.id'''
     brands = [line.strip("\n") for line in open("data/brands.txt")]
+    
+    # read in manual subcat info
+    subcats = {}
+    for line in open("data/subcats.txt"):
+        subcats[line.split("\t")[0]] = line.split("\t")[1].strip("\n")
 
     # read sql query into table
-    items_df = pd.read_sql(QUERY, sqlite3.connect('data/db.sqlite3'))
+    items_df1 = pd.read_sql(QUERY, sqlite3.connect('data/db.sqlite3'))
+    items_df2 = pd.read_sql(QUERY, sqlite3.connect('data/db2.sqlite3'))
+    items_df = pd.concat([items_df1, items_df2])
     # trim and modify fields
     items_df["new_name"] = items_df["name"].apply(cleanup_name)
     items_df["brand"] = items_df["name"].apply(lambda x: assign_brand(x, brands))
     items_df["new_cat"] = items_df["category"].apply(lambda x: trim_category(str(x)))
-    items_df["sub_cat"] = items_df.apply(assign_subcat, axis="columns")
+    items_df["sub_cat"] = items_df["new_name"].apply(lambda x: assign_subcat(x, subcats))
     items_df["new_date"] = items_df.created_at.apply(midnight)
     # remove old fields
     items = items_df.drop(["id","created_at","name"], axis=1)
@@ -100,6 +97,7 @@ def main():
         "price_type":"first", "sold":"sum", "unit_name":"first", "item_cost":"first", \
         "store_use":"sum", "spoilage":"sum","food_prep":"sum", "committee":"sum", \
         "member_discount_applied":"sum", "new_cat":"first", "brand":"first", "sub_cat":"first"})
+    
     # write to json
     items_grouped.to_json("data/items.json", orient="records")
 

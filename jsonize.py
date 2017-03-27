@@ -32,7 +32,7 @@ def trim_category(field):
     #m = re.search("(.*)?[\[]*.+", field)
     # return m.group(1)
     if field == "None":
-        return None
+        return "Other"
     else:
         temp = field.replace(" [Cashier Code: - ]", "")
         return temp.replace(" [Cashier Code: ' ]", "")
@@ -41,10 +41,10 @@ def assign_subcat(name, subcats):
 
     try:
         if subcats[name] == "":
-            return None
+            return "Other"
         else: return subcats[name]
     except:
-        return None
+        return "Other"
 
 def assign_brand(field, brands):
 
@@ -56,15 +56,15 @@ def assign_brand(field, brands):
 
     if final != "":
         return final
-    else: return None
+    else: return "Other"
 
 # change dates to midnight for aggregation
 def midnight(date):
     
-    try:
-        d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f")
-    except:
-        d = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    print type(date)
+
+    d = datetime.datetime.fromtimestamp(int(date)/1000.0)
+
     return d.strftime("%Y-%m-%d 00:00:00")
 
 def main():
@@ -81,19 +81,20 @@ def main():
         subcats[line.split("\t")[0]] = line.split("\t")[1].strip("\n")
 
     # read sql query into table
-    items_df1 = pd.read_sql(QUERY, sqlite3.connect('data/db.sqlite3'))
-    items_df2 = pd.read_sql(QUERY, sqlite3.connect('data/db2.sqlite3'))
-    items_df = pd.concat([items_df1, items_df2])
+    #items_df1 = pd.read_sql(QUERY, sqlite3.connect('data/db.sqlite3'))
+    #items_df2 = pd.read_sql(QUERY, sqlite3.connect('data/db2.sqlite3'))
+    #items_df = pd.concat([items_df1, items_df2])
+    items_df = pd.read_sql(QUERY, sqlite3.connect('data/db3.sqlite3'))
     # trim and modify fields
-    items_df["new_name"] = items_df["name"].apply(cleanup_name)
+    items_df["key"] = items_df["name"].apply(cleanup_name)
     items_df["brand"] = items_df["name"].apply(lambda x: assign_brand(x, brands))
     items_df["new_cat"] = items_df["category"].apply(lambda x: trim_category(str(x)))
-    items_df["sub_cat"] = items_df["new_name"].apply(lambda x: assign_subcat(x, subcats))
+    items_df["sub_cat"] = items_df["key"].apply(lambda x: assign_subcat(x, subcats))
     items_df["new_date"] = items_df.created_at.apply(midnight)
     # remove old fields
     items = items_df.drop(["id","created_at","name"], axis=1)
     # group and aggregate by item/date
-    items_grouped = items.groupby(["new_name","new_date"], as_index=False).aggregate({"price":"first", \
+    items_grouped = items.groupby(["key","new_date"], as_index=False).aggregate({"price":"first", \
         "price_type":"first", "sold":"sum", "unit_name":"first", "item_cost":"first", \
         "store_use":"sum", "spoilage":"sum","food_prep":"sum", "committee":"sum", \
         "member_discount_applied":"sum", "new_cat":"first", "brand":"first", "sub_cat":"first"})

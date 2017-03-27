@@ -2,51 +2,72 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>BSFC Data</title>
+    <title>Mass Spec Viz</title>
 
     <!-- ADD Libraries-->
     <script src="libs/d3/d3.min.js" charset="utf-8"></script>
     <script src="libs/jquery/jquery-2.1.1.min.js" charset="utf-8"></script>
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/queue.v1.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+    
     <!--Stylesheets-->
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
-
+    
     <!-- Get some nice font-->
     <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
 
-    <script src = "js/priovis.js"></script>
-    <script src = "js/agevis.js"></script>
-    <script src = "js/countvis.js"></script>
-    <script src = "js/heatmap.js"></script>
+    <script src = "js/timeline.js"></script>
+    <script src = "js/timeselect.js"></script>
+    <script src = "js/treemap.js"></script>
 
     <!-- add own stylesheet-->
     <link rel="stylesheet" type="text/css" href="css/myStyle.css">
 
 </head>
 <body>
-    <div class="container">
-        <h1>BSFC Data Portal</h1>
+    <div>
+        <h1>BSFC Discovery Platform</h1>
 
         <div class="row">
             <div class="col-md-8 col-sm-12">
-               <p> Analyze sales data! </p>
+               <p> info info info</p>
             </div>
         </div>
         <div class="row">
             <div class="col-md-4" style = "width:300px">
-                <b>current brush:</b> <span id="brushInfo"></span>
+                <b>current selection:</b> <span id="brushInfo"></span>
             </div>
         </div>
-        <br>
         <div class="row">
-            <div class="col-md-3" id = "mode">
+            <div class="col-md-6" id="timeVis">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6" id="timeSelect">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12" id="catVis">
+            </div>
+        </div>
+        <!--<div class="container">
+            <div class="row">
+            <label class="checkbox-inline">
+                <input type="checkbox" id="order" checked data-on="Sorted" data-off="Clustered" data-toggle="toggle"> Order
+            </label>
+            <label class="checkbox-inline">
+                <input type="checkbox" id="data_type" data-on="Quantitative" checked data-off="Binary" data-toggle="toggle"> Data Type
+            </label>
+            </div>
+        </div> -->
+        <div class="row">
+            <div class="col-md-3" id = "order">
               <form>
               Order:
                 <select>
-                  <option value="sort" selected >Sorted</option>
-                  <option value="clust">Clustered</option>
+                  <option value="sort" selected >sort by name</option>
+                  <option value="hclust">cluster</option>
                 </select>
               </form>
             </div>
@@ -60,19 +81,6 @@
               </form>
             </div>
         </div>
-        <br>
-        <div class="row">
-            <div class="col-md-12" id="salesVis">
-            </div>
-        </div>
-         <div class="row">
-            <div class="col-md-12" id="timeVis">
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12" id="treeVis">
-            </div>
-        </div>
     </div>
 
     <script>
@@ -82,92 +90,64 @@
             var allData = [];
             var MyEventHandler;
 
-            // this function can convert Date objects to a string
-            // it can also convert strings to Date objects
-            // see: https://github.com/mbostock/d3/wiki/Time-Formatting
-            var dateFormatter = d3.time.format("%Y-%m-%d");
-
-            // call this function after Data is loaded, reformatted and bound to the variables
+            // call this function after Data is loaded
             var initVis = function(){
 
                 MyEventHandler = new Object();
 
                 // add in visualizations
-                /*var count_vis = new CountVis(d3.select("#countVis"), allData, metaData, MyEventHandler, "default"); */
-                var time_vis = new HeatMap(d3.select("#ageVis"), allData, metaData, MyEventHandler);
-                /*var prio_vis = new PrioVis(d3.select("#prioVis"), allData, metaData,"default"); */
+                var time_vis = new Timeline(d3.select("#timeVis"), allData, MyEventHandler);
+                var time_select = new Timeselect(d3.select("#timeSelect"), allData, MyEventHandler);
+                var tree_map = new Treemap(d3.select("#catVis"), allData, MyEventHandler);
 
-                // TODO: bind the eventHandler to the Vis Objects
-                // events will be created from the CountVis object (nothing to do here)
-                // events will be consumed by the PrioVis and AgeVis object (binding should happen here)
-                /*$(MyEventHandler).bind("selectionChanged", function(event, pass){
-                    
-                    // TODO re-aggregate data for partition viz
-
-                    age_vis.onSelectionChange(pass);
-                    prio_vis.onSelectionChange(pass);
-
-                    // update brush text
-                    start = dateFormatter(pass["start"]);
-                    end = dateFormatter(pass["end"]);
-                    d3.select("#brushInfo").selectAll("text").remove()
-                    d3.select("#brushInfo").append("text").text(start + " to " + end)
-                }); */
-
-                /* $(MyEventHandler).bind("brushEmpty", function(event){
-                    console.log("hoo");
-                    d3.select("#prioVis").style("visibility", "hidden")
-                }) */
+                // bind eventHandlers to the Vis Objects
+                $(MyEventHandler).bind("selectionChanged", function(event, pass){
+                    time_vis.onSelectionChange(pass);
+                    tree_map.onSelectionChange(pass);
+                });
 
             }
 
-            // call this function after both files are loaded -- error should be "null" if no error
-            var dataLoaded = function (error, _allData) {
+            // call this function after both files are loaded
+            // could apply data transformations here
+            var dataLoaded = function (error, clover_data) {
 
                 if (!error) {
+                    
+                    /*allData = _allData.map(function(d){
+                    }) */
+                    
+                    allData = clover_data;
+                    
+                    console.log(allData);
 
-                    console.log("started")
-                    console.log(_allData);
-                    allData = _allData
                     initVis();
                 }
-
-                else{console.log(error)}
             }
 
             var startHere = function(){
 
-            // load datasets with queue.js
-            // help from https://github.com/mbostock/queue
-            queue()
-                .defer(d3.json, 'data/items.json')
-                .await(function(error,file1){dataLoaded(error,file1)});
-            }
-
-            // define behavior on changing mode
-            /*d3.select("#mode").select("select").on("change", function(){
-                mode_id = d3.select(this).property("value")
-                // get rid of old count vis - need to remove existing brush if any
-                d3.select("#countVis").select("svg").remove();
-                var count_vis = new CountVis(d3.select("#countVis"), allData, metaData, MyEventHandler, mode_id);
-                // get rid of old prio vis
-                d3.select("#prioVis").select("svg").remove();
-                // add in new prio vis
-                var prio_vis = new PrioVis(d3.select("#prioVis"), allData, metaData, mode_id);
-                // hide priovis on initialization of avg mode
-                if (mode_id == "avg"){d3.select("#prioVis").style("visibility", "hidden") 
+                // load datasets with queue.js
+                queue()
+                    .defer(d3.json, 'testing/items.json')
+                    .await(function(error,file1){dataLoaded(error,file1)});
                 }
-                // else add it back
-                else {d3.select("#prioVis").style("visibility", "visible")}
-                //rebind event handler
-                $(MyEventHandler).bind("selectionChanged", function(event, pass){
-                    prio_vis.onSelectionChange(pass);
-                })
-            }); */
 
-            startHere();
+                /* define button behaviors
+                d3.select("#order").select("select").on("change",function(){
+                    console.log("test")
+                    pass = {type:"order", value:this.value}
+                    $(MyEventHandler).trigger("selectionChanged", pass)
+                });
+                d3.select("#data_type").select("select").on("change",function(){
+                    console.log("toggle")
+                    pass = {type:"data_type", value:this.value}
+                    $(MyEventHandler).trigger("selectionChanged", pass)
+                }); */
 
+                startHere();
         })
+
     </script>
 </body>
 </html>

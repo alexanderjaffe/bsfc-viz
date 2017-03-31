@@ -13,6 +13,7 @@
 }
 text {
   pointer-events: none;
+  font-size:10px;
 }
 
 .grandparent text {
@@ -48,9 +49,20 @@ rect.parent {
 
 .children rect.parent {
   fill: #bbb;
-  fill-opacity: .5;
+  fill-opacity: .8;
 }
 
 .children:hover rect.child {
   fill: #bbb;
+}
+
+
+.axis line,
+.axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.axis text {
+    font: 10px sans-serif;
 }

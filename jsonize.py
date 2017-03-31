@@ -2,6 +2,7 @@ import re
 import datetime
 import sqlite3
 import pandas as pd
+import random
 
 # trim out excess symbols, specific edits
 def cleanup_name(field):
@@ -59,13 +60,13 @@ def assign_brand(field, brands):
     else: return "Other"
 
 # change dates to midnight for aggregation
-def midnight(date):
-    
-    print type(date)
+def midnight(item):
 
-    d = datetime.datetime.fromtimestamp(int(date)/1000.0)
+    d = datetime.datetime.strptime(item, "%Y-%m-%d %H:%M:%S.%f")
+    #d = datetime.datetime.fromtimestamp(item/1000.0)
+    #d = datetime.datetime.strftime("%Y-%m-%d 00:00:00")
 
-    return d.strftime("%Y-%m-%d 00:00:00")
+    return d.strftime("%Y-%m-%d")
 
 def main():
     
@@ -92,15 +93,49 @@ def main():
     items_df["sub_cat"] = items_df["key"].apply(lambda x: assign_subcat(x, subcats))
     items_df["new_date"] = items_df.created_at.apply(midnight)
     # remove old fields
-    items = items_df.drop(["id","created_at","name"], axis=1)
+    items = items_df.drop(["id","created_at","name","category"], axis=1)
     # group and aggregate by item/date
     items_grouped = items.groupby(["key","new_date"], as_index=False).aggregate({"price":"first", \
         "price_type":"first", "sold":"sum", "unit_name":"first", "item_cost":"first", \
         "store_use":"sum", "spoilage":"sum","food_prep":"sum", "committee":"sum", \
         "member_discount_applied":"sum", "new_cat":"first", "brand":"first", "sub_cat":"first"})
     
+    # TEMP - make fake data
+    # get unique combos 
+    names = ["key","unit_name","price","sub_cat","new_cat","item_cost","price_type","brand"]
+    zipped = zip(items_grouped.key, items_grouped.unit_name, items_grouped.price, items_grouped["sub_cat"], \
+                 items_grouped["new_cat"],items_grouped["item_cost"],items_grouped["price_type"],items_grouped["brand"])
+    zuniq = list(set(zipped))
+
+    fake_data = []
+    start = 21
+
+    for i in range(1,40):
+        day = start + i
+        date = "2017-03-" + str(day)
+        if day > 31:
+            day = day % 31
+            date = "2017-04-" + str(day)
+        
+        for item in zuniq:
+            temp = {}
+            for i in range(0,len(item)):
+                temp[names[i]] = item[i]
+            temp["new_date"] = date
+            temp["sold"] = random.choice([0]*20+[1]*4+[3]*2+[4]*3+[5]*2+[9]*2)
+            temp["spoilage"] = 0
+            temp["food_prep"] = 0
+            temp["store_use"] = 0
+            temp["committee"] = 0
+            temp["member_discount_applied"] = 0
+            
+            fake_data.append(temp)
+
+    fake_df = pd.DataFrame(fake_data)
+    merged_items = pd.concat([items_grouped, fake_df])
+    
     # write to json
-    items_grouped.to_json("data/items.json", orient="records")
+    merged_items.to_json("data/items.json", orient="records")
 
 if __name__ == '__main__':
     main()

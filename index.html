@@ -28,8 +28,27 @@
 <body>
     <div>
         <h1>BSFC Discovery Platform</h1>
-
-        <div class="row">
+        <!-- <div class="row">
+            <div class="col-md-3" id = "order">
+              <form>
+              Order:
+                <select>
+                  <option value="sort" selected >sort by name</option>
+                  <option value="hclust">cluster</option>
+                </select>
+              </form>
+            </div>
+            <div class="col-md-3" id = "data_type">
+              <form>
+              Data Type:
+                <select>
+                  <option value="quant" selected >Quantitative</option>
+                  <option value="bin">Binary</option>
+                </select>
+              </form>
+            </div>
+        </div> -->
+        <!--<div class="row">
             <div class="col-md-8 col-sm-12">
                <p> info info info</p>
             </div>
@@ -38,7 +57,7 @@
             <div class="col-md-4" style = "width:300px">
                 <b>current selection:</b> <span id="brushInfo"></span>
             </div>
-        </div>
+        </div> -->
         <div class="row">
             <div class="col-md-6" id="timeVis">
             </div>
@@ -61,26 +80,6 @@
             </label>
             </div>
         </div> -->
-        <div class="row">
-            <div class="col-md-3" id = "order">
-              <form>
-              Order:
-                <select>
-                  <option value="sort" selected >sort by name</option>
-                  <option value="hclust">cluster</option>
-                </select>
-              </form>
-            </div>
-            <div class="col-md-3" id = "data_type">
-              <form>
-              Data Type:
-                <select>
-                  <option value="quant" selected >Quantitative</option>
-                  <option value="bin">Binary</option>
-                </select>
-              </form>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -88,7 +87,9 @@
 
             // variables keeping global knowledge of the data
             var allData = [];
+            var testData;
             var MyEventHandler;
+            var dateFormatter = d3.time.format("%Y-%m-%d");
 
             // call this function after Data is loaded
             var initVis = function(){
@@ -97,29 +98,58 @@
 
                 // add in visualizations
                 var time_vis = new Timeline(d3.select("#timeVis"), allData, MyEventHandler);
-                var time_select = new Timeselect(d3.select("#timeSelect"), allData, MyEventHandler);
+                //var time_select = new Timeselect(d3.select("#timeSelect"), allData, MyEventHandler);
                 var tree_map = new Treemap(d3.select("#catVis"), allData, MyEventHandler);
 
                 // bind eventHandlers to the Vis Objects
-                $(MyEventHandler).bind("selectionChanged", function(event, pass){
-                    time_vis.onSelectionChange(pass);
-                    tree_map.onSelectionChange(pass);
+                $(MyEventHandler).bind("zoomChanged", function(event, pass){
+                    console.log(pass)
+                    time_vis.onZoomChange(pass);
+                    //tree_map.onSelectionChange(pass);
                 });
 
             }
 
             // call this function after both files are loaded
             // could apply data transformations here
-            var dataLoaded = function (error, clover_data) {
+            var dataLoaded = function (error, clover_data,test_data) {
 
                 if (!error) {
                     
-                    /*allData = _allData.map(function(d){
-                    }) */
-                    
                     allData = clover_data;
-                    
-                    console.log(allData);
+                    console.log(allData)
+
+                    /*testData = test_data.map(function (d) {
+                                var res = {
+                                    time: dateFormatter.parse(d.day),
+                                    count: parseInt(d["count(*)"])
+                                };
+
+                                keys_nos = d3.range(0,16)
+                                // generate names of keys
+                                keys_name = [] 
+                                keys_nos.map(function(k){keys_name.push("sum(p" + k + ")")})
+                                // get priority counts
+                                res.prios = []
+                                keys_name.map(function(l){res.prios.push(d[l])})
+
+                                // This is ONE way to create an array of length 100
+                                // and set every value to "0")
+                                res.ages = d3.range(0,100). map(function(){return 0;})
+
+                                // for each age object write over res.ages 0
+                                d.age.forEach(function(k,i){
+                                    // remove weird stuff
+                                    if (k.age > 99 || k.age == ""){}
+                                    else {
+                                        res.ages[k.age] = k["count(*)"]
+                                    }
+                                })
+
+                                return res;
+                            }
+                    )*/
+
 
                     initVis();
                 }
@@ -129,8 +159,9 @@
 
                 // load datasets with queue.js
                 queue()
-                    .defer(d3.json, 'testing/items.json')
-                    .await(function(error,file1){dataLoaded(error,file1)});
+                    .defer(d3.json, 'data/items.json')
+                    .defer(d3.json, "data/perDayData.json")
+                    .await(function(error,file1,file2){dataLoaded(error,file1,file2)});
                 }
 
                 /* define button behaviors

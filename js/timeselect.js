@@ -64,8 +64,8 @@ Timeselect.prototype.onSelectionChange= function(pass){
     // unpack passed object
     type = pass["type"]
 
-    // call relevant function
-    if (type=="order"){this.order(pass["value"])}
-    else if (type == "data_type"){this.colorize(pass["value"])}
+    this.wrangleData();
+
+    this.updateVis();
 
 }

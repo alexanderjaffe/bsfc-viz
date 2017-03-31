@@ -30,7 +30,7 @@ CountVis = function(_parentElement, _data, _metaData, _eventHandler, mode_id){
     // TODO: define all "constants" here
     // from cs171 section 6
     this.margin = {top: 20, right: 0, bottom: 30, left: 50},
-    this.width = 650 - this.margin.left - this.margin.right,
+    this.width = window.innerWidth - this.margin.left - this.margin.right,
     this.height = 300 - this.margin.top - this.margin.bottom;
 
     this.initVis();

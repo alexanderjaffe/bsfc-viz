@@ -41,7 +41,7 @@ Timeline.prototype.initVis = function(){
 
     // initialize path
     this.area = d3.svg.area()
-      .interpolate("monotone")
+      .interpolate("basis")
       .x(function(d) { return that.x(d.time);})
       .y0(this.height)
       .y1(function(d) { return that.y(d.count);})
@@ -131,6 +131,7 @@ Timeline.prototype.updateVis = function(){
         .call(this.xAxis);
 
     this.svg.select(".y.axis")
+        .transition().duration(750)
         .call(this.yAxis)
 
     // updates graph
@@ -148,7 +149,7 @@ Timeline.prototype.updateVis = function(){
         .attr("stroke", "steelblue")
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
-        //.attr("stroke-width", 1.5)
+        .attr("stroke-width", 1.5)
         .transition().duration(750)
         .attr("d", that.area)
         //.attr("d", that.line)

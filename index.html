@@ -2,11 +2,14 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Mass Spec Viz</title>
+    <title>BSFC Discovery Platform</title>
 
     <!-- ADD Libraries-->
     <script src="libs/d3/d3.min.js" charset="utf-8"></script>
-    <script src="libs/jquery/jquery-2.1.1.min.js" charset="utf-8"></script>
+          <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+         rel = "stylesheet">
+      <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+      <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/queue.v1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
@@ -28,6 +31,10 @@
 <body>
     <div>
         <h1>BSFC Discovery Platform</h1>
+        <div class = "ui-widget">
+         <label for = "autocomplete-1">Search for product, brand, or category: </label>
+         <input id = "autocomplete-1">
+      </div>
         <!-- <div class="row">
             <div class="col-md-3" id = "order">
               <form>
@@ -119,37 +126,22 @@
                     allData = clover_data;
                     console.log(allData)
 
-                    /*testData = test_data.map(function (d) {
-                                var res = {
-                                    time: dateFormatter.parse(d.day),
-                                    count: parseInt(d["count(*)"])
-                                };
+                    // get all product names
+                    products = _.uniq(allData.map(function(d){return d.key})).sort()
 
-                                keys_nos = d3.range(0,16)
-                                // generate names of keys
-                                keys_name = [] 
-                                keys_nos.map(function(k){keys_name.push("sum(p" + k + ")")})
-                                // get priority counts
-                                res.prios = []
-                                keys_name.map(function(l){res.prios.push(d[l])})
-
-                                // This is ONE way to create an array of length 100
-                                // and set every value to "0")
-                                res.ages = d3.range(0,100). map(function(){return 0;})
-
-                                // for each age object write over res.ages 0
-                                d.age.forEach(function(k,i){
-                                    // remove weird stuff
-                                    if (k.age > 99 || k.age == ""){}
-                                    else {
-                                        res.ages[k.age] = k["count(*)"]
-                                    }
-                                })
-
-                                return res;
-                            }
-                    )*/
-
+                    // now initialize search bar
+                    $( "#autocomplete-1" ).autocomplete({
+                       source: products,
+                       minLength:2,
+                       delay:500,
+                       autofocus:true,
+                       // on select event
+                       select: function( event, ui ) {
+                        console.log(ui.item)
+                        pass = {name:ui.item.value, type:"key"}
+                        $(MyEventHandler).trigger("zoomChanged", pass)
+                        }
+                    });
 
                     initVis();
                 }

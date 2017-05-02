@@ -7,7 +7,7 @@ Treemap = function(_parentElement, _data, _eventHandler){
     this.data = _data;
     this.displayData = [];
     this.eventHandler = _eventHandler;
-    this.margin = {top: 20, right: 20, bottom: 20, left: 20},
+    this.margin = {top: 20, right: 50, bottom: 30, left: 50},
 
     // boot up the viz
     this.initVis();
@@ -21,8 +21,8 @@ Treemap.prototype.initVis =  function () {
   //margin = {top: 24, right: 0, bottom: 0, left: 0},
   rootname =  "TOP",
   title = "",
-  this.width = window.innerWidth,
-  this.height = window.innerHeight/3,
+  this.width = window.innerWidth - this.margin.left - this.margin.right,
+  this.height = window.innerHeight/3 -  this.margin.top - this.margin.bottom,
   this.format = d3.format(".0f"),
   rname = rootname,
   theight = 36 + 16
@@ -48,8 +48,8 @@ Treemap.prototype.initVis =  function () {
   this.svg = d3.select("#catVis").append("svg")
       .attr("width", that.width + that.margin.left + that.margin.right)
       .attr("height", that.height + that.margin.bottom + that.margin.top)
-      .style("margin-left", -that.margin.left + "px")
-      .style("margin.right", -that.margin.right + "px")
+      //.style("margin-left", -that.margin.left + "px")
+      //.style("margin.right", -that.margin.right + "px")
       .append("g")
       .attr("transform", "translate(" + that.margin.left + "," + that.margin.top + ")")
       .style("shape-rendering", "crispEdges");

@@ -30,10 +30,12 @@
 </head>
 <body>
     <div>
+        <div style='margin-top:0px;margin-left:50px;margin-right:20px;'>
         <h1>BSFC Discovery Platform</h1>
         <div class = "ui-widget">
-         <label for = "autocomplete-1">Search for product, brand, or category: </label>
-         <input id = "autocomplete-1">
+         <label style="font-size:12px" for = "autocomplete-1">Search for product, brand, or category: </label>
+         <input style="font-size:12px" id = "autocomplete-1">
+        </div>
       </div>
         <!-- <div class="row">
             <div class="col-md-3" id = "order">
@@ -77,6 +79,12 @@
             <div class="col-md-12" id="catVis">
             </div>
         </div>
+        <div class = "row" style='margin-left:50px;margin-right:50px;font-size:16px;border: 2px solid lightgray; padding:15px'>
+            <div class="col-md-3" id="units">Total units: </div>
+            <div class="col-md-3" id="revenue">Revenue: </div>
+            <div class="col-md-3" id="costs">Costs: </div>
+            <div class="col-md-3" id="net">Net: </div>
+        </div>
         <!--<div class="container">
             <div class="row">
             <label class="checkbox-inline">
@@ -97,23 +105,38 @@
             var testData;
             var MyEventHandler;
             var dateFormatter = d3.time.format("%Y-%m-%d");
+            var usd = d3.format("$,.2f")
+            var num = d3.format(",.2f")
+            var colors = {"key":"black", "brand":"green", "sub_cat":"blue", "new_cat":"red"}
+            var labs = {"key":"", "brand":"brand", "sub_cat":"subcategory", "new_cat":"category"}
 
             // call this function after Data is loaded
             var initVis = function(){
 
                 MyEventHandler = new Object();
 
+                // bind eventHandlers to the Vis Objects
+                $(MyEventHandler).bind("zoomChanged", function(event, pass){
+                    time_vis.onZoomChange(pass);
+                    //tree_map.onSelectionChange(pass);
+                });
+                $(MyEventHandler).bind("statsChanged", function(event, pass){
+                    
+                    // update stats
+                    d3.select("#units").html("<b>Units: </b>" + num(pass.uts))
+                    d3.select("#revenue").html("<b>Revenue: </b>" + usd(pass.rev))
+                    d3.select("#costs").html("<b>Costs: </b>" + usd(pass.cts))
+                    var net = pass.rev - pass.cts
+                    var color = (net > 0) ? "green" : "red"
+                    text = "<b>Net: " + "<span style='color:" + color + "'> " + usd(net) + "</span></b>"
+                    d3.select("#net").html(text)
+
+                });
+
                 // add in visualizations
                 var time_vis = new Timeline(d3.select("#timeVis"), allData, MyEventHandler);
                 //var time_select = new Timeselect(d3.select("#timeSelect"), allData, MyEventHandler);
                 var tree_map = new Treemap(d3.select("#catVis"), allData, MyEventHandler);
-
-                // bind eventHandlers to the Vis Objects
-                $(MyEventHandler).bind("zoomChanged", function(event, pass){
-                    console.log(pass)
-                    time_vis.onZoomChange(pass);
-                    //tree_map.onSelectionChange(pass);
-                });
 
             }
 
@@ -126,24 +149,38 @@
                     allData = clover_data;
                     console.log(allData)
 
-                    // get all product names
-                    products = _.uniq(allData.map(function(d){return d.key})).sort()
+                    // get all product, cat names
+                    items = []
+                    fields = ["key", "brand", "sub_cat", "new_cat"]
+                    products = allData.map(function(d){
+                        fields.forEach(function(f){
+                            items.push({value:d[f], label:d[f], desc: f})
+                        })
+                    })
+                    // dereplicate
+                    items_uniq = _.uniq(items, function(d){return d.value})
 
                     // now initialize search bar
                     $( "#autocomplete-1" ).autocomplete({
-                       source: products,
-                       minLength:2,
+                       source: items_uniq,
+                       minLength:3,
                        delay:500,
-                       autofocus:true,
+                       //autofocus:true,
                        // on select event
                        select: function( event, ui ) {
-                        console.log(ui.item)
-                        pass = {name:ui.item.value, type:"key"}
+                        pass = {name:ui.item.value, type:ui.item.desc}
                         $(MyEventHandler).trigger("zoomChanged", pass)
                         }
-                    });
+                    })
 
-                    initVis();
+                    // format list entries
+                    .data( "ui-autocomplete" )._renderItem = function( ul, item ) {
+                        return $( "<li>" )
+                       .append( "<a><span style='font-size:12px'>" + item.label + " " + "</span><span style='color:" + colors[item.desc] + ";font-size:10px'>" + labs[item.desc] + "</span></a>")
+                       .appendTo( ul );
+                }
+
+                initVis();
                 }
             }
 

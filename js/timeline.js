@@ -7,9 +7,9 @@ Timeline = function(_parentElement, _data, _eventHandler){
     this.eventHandler = _eventHandler;
     this.displayData = [];
 
-    this.margin = {top: 20, right: 0, bottom: 30, left: 50},
+    this.margin = {top: 40, right: 50, bottom: 40, left: 50},
     this.width = window.innerWidth - this.margin.left - this.margin.right,
-    this.height = 300 - this.margin.top - this.margin.bottom;
+    this.height = window.innerHeight/3 - this.margin.top - this.margin.bottom;
 
     this.initVis();
 }
@@ -41,12 +41,15 @@ Timeline.prototype.initVis = function(){
 
     // initialize path
     this.area = d3.svg.area()
-      .interpolate("basis")
+      .interpolate("monotone")
       .x(function(d) { return that.x(d.time);})
       .y0(this.height)
       .y1(function(d) { return that.y(d.count);})
 
-    this.dateFormatter = d3.time.format("%Y-%m-%d");
+    // to interpret input data
+    this.df = d3.time.format("%Y-%m-%d");
+    // to format interpreted date
+    this.df2 = d3.time.format("%a %b %d %Y %H:%M:%S");
 
     /*this.line = d3.svg.line()
         .x(function(d) { return that.x(d.time); })
@@ -79,6 +82,8 @@ Timeline.prototype.wrangleData= function(pass){
     var that = this;
     var filt_data;
 
+    console.log(pass);
+    
     // if null, use all data, else filter
     if (pass!=null){
         if (pass.name=="All Items"){
@@ -95,25 +100,63 @@ Timeline.prototype.wrangleData= function(pass){
     }
     else {filt_data = this.data}
 
+    // calculate summary metrics
+    var revenue = 0;
+    var costs = 0;
+    var units = 0;
+
+    filt_data.forEach(function(d){
+        revenue += d.sold*d.price;
+        costs += d.sold*d.item_cost;
+        units += d.sold;
+    })
+
+    //send back to index, convert to $
+    pass = {rev: revenue/100, cts: costs/100, uts:units}
+    $(this.eventHandler).trigger("statsChanged", pass);
+
     // use that data to look at totals by day
     var nested_data = d3.nest().key(function(d){return d.new_date})
         .rollup(function(d){return d3.sum(d, function(g){return g.sold})})
         .entries(filt_data)
 
+
+    test = _.sortBy(filt_data, 'price' )
+    console.log(test.reverse()[0])
+
     // reformat date
     this.intData= nested_data.map(function(d){
+
         var res = {
-            time: that.dateFormatter.parse(d.key),
+            // interpret data and recast
+            time: that.df2(that.df.parse(d.key)),
             count: parseFloat(d.values)
         }
 
         return res;
     })
 
-    // IMPT to sort by date for path to render correctly
-    this.displayData = _.sortBy(this.intData, 'time' )
+    // zero the data - ie, there's a point for every day
+    // generate date range
+    var drange = d3.time.day.range(d3.min(that.intData, function(d){return that.df2.parse(d.time)}), d3.max(that.intData, function(d){return that.df2.parse(d.time)}))
+    var zeroes = {}
+    // initialize each datum to 0
+    drange.forEach(function(d){zeroes[(that.df2(d))] = 0})
 
-    console.log(this.displayData)
+    // fill in actual counts
+    this.intData.forEach(function(d){
+        zeroes[d.time] = d.count
+    })
+
+    // turn into list
+    zeroed = []
+    for (key in zeroes){
+        zeroed.push({time:that.df2.parse(key), count: zeroes[key]})
+    }
+
+    // IMPT to sort by date for path to render correctly
+    this.displayData = _.sortBy(zeroed, 'time' )
+
 }
 
 Timeline.prototype.updateVis = function(){
@@ -124,7 +167,7 @@ Timeline.prototype.updateVis = function(){
     this.x.domain(d3.extent(this.displayData, function(d) { return d.time; }));
     this.y.domain(d3.extent(this.displayData, function(d) { return d.count; }));
 
-    console.log(d3.extent(this.displayData, function(d) { return d.time; }));
+    //console.log(d3.extent(this.displayData, function(d) { return d.time; }));
 
     // updates axis
     this.svg.select(".x.axis")
@@ -157,6 +200,24 @@ Timeline.prototype.updateVis = function(){
     // remove old objects
     path.exit()
       .remove();
+
+    // points
+    var points = this.svg.selectAll(".point")
+        .data(this.displayData)
+
+    points.enter()
+        .append("svg:circle")
+        .attr("class", "point")
+
+    points
+        .attr("stroke", "black")
+        .attr("fill", "black")
+        .transition().duration(750)
+        .attr("cx", function(d){return that.x(d.time)})
+        .attr("cy", function(d){return that.y(d.count)})
+        .attr("r", 1.5)
+
+    points.exit().remove()
 
 }
 

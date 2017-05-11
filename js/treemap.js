@@ -200,6 +200,7 @@ Treemap.prototype.next = function(){
 
     children.append("rect")
       .attr("class", "child")
+      .attr("id", function(d){return d.key})
       .call(rect)
       .on("click", function(d){
         pass = {name:d.parent.key, type:that.reverse_dict[d.parent.key]}
@@ -236,6 +237,8 @@ Treemap.prototype.next = function(){
 
     function transition(d) {
       
+      console.log(d);
+
       if (that.transitioning || !d) return;
       that.transitioning = true;
 

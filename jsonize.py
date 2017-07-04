@@ -6,10 +6,10 @@ import random
 
 # trim out excess symbols, specific edits
 def cleanup_name(field):
-    
+
     m = re.search(".*?([A-z0-9].+)", field)
     new = m.group(1)
-    
+
     # case specific edits
     if "Farmers Market" in new:
         return new.replace("Farmers Market", "Farmer's Market")
@@ -29,7 +29,7 @@ def cleanup_name(field):
 
 # trim out excess symbols and chars
 def trim_category(field):
-    
+
     #m = re.search("(.*)?[\[]*.+", field)
     # return m.group(1)
     if field == "None":
@@ -69,13 +69,16 @@ def midnight(item):
     return d.strftime("%Y-%m-%d")
 
 def main():
-    
+
     QUERY = '''SELECT item_item.id, name, category, price, price_type, unit_name, \
         item_cost, store_use, spoilage, food_prep, committee, sold, member_discount_applied, \
             created_at FROM item_item INNER JOIN cost_cost ON item_item.cost_id = cost_cost.id \
             INNER JOIN revenue_revenue ON item_item.revenue_id = revenue_revenue.id'''
     brands = [line.strip("\n") for line in open("data/brands.txt")]
-    
+
+    import os
+    os.getcwd()
+
     # read in manual subcat info
     subcats = {}
     for line in open("data/subcats.txt"):
@@ -99,9 +102,9 @@ def main():
         "price_type":"first", "sold":"sum", "unit_name":"first", "item_cost":"first", \
         "store_use":"sum", "spoilage":"sum","food_prep":"sum", "committee":"sum", \
         "member_discount_applied":"sum", "new_cat":"first", "brand":"first", "sub_cat":"first"})
-    
-    # TEMP - make fake data
-    # get unique combos 
+
+    '''# TEMP - make fake data
+    # get unique combos
     names = ["key","unit_name","price","sub_cat","new_cat","item_cost","price_type","brand"]
     zipped = zip(items_grouped.key, items_grouped.unit_name, items_grouped.price, items_grouped["sub_cat"], \
                  items_grouped["new_cat"],items_grouped["item_cost"],items_grouped["price_type"],items_grouped["brand"])
@@ -116,7 +119,7 @@ def main():
         if day > 31:
             day = day % 31
             date = "2017-04-" + str(day)
-        
+
         for item in zuniq:
             temp = {}
             for i in range(0,len(item)):
@@ -128,15 +131,15 @@ def main():
             temp["store_use"] = 0
             temp["committee"] = 0
             temp["member_discount_applied"] = 0
-            
+
             fake_data.append(temp)
 
     fake_df = pd.DataFrame(fake_data)
     merged_items = pd.concat([items_grouped, fake_df])
-    
+
     # write to json
-    merged_items.to_json("data/items.json", orient="records")
+    merged_items.to_json("data/items.json", orient="records")'''
+    items_grouped.to_json("data/items.json", orient="records")
 
 if __name__ == '__main__':
     main()
-

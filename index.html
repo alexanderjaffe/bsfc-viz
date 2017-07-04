@@ -13,10 +13,10 @@
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/queue.v1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
-    
+
     <!--Stylesheets-->
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
-    
+
     <!-- Get some nice font-->
     <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
 
@@ -121,7 +121,7 @@
                     //tree_map.onSelectionChange(pass);
                 });
                 $(MyEventHandler).bind("statsChanged", function(event, pass){
-                    
+
                     // update stats
                     d3.select("#units").html("<b>Units: </b>" + num(pass.uts))
                     d3.select("#revenue").html("<b>Revenue: </b>" + usd(pass.rev))
@@ -145,7 +145,7 @@
             var dataLoaded = function (error, clover_data,test_data) {
 
                 if (!error) {
-                    
+
                     allData = clover_data;
                     console.log(allData)
 
@@ -157,6 +157,7 @@
                             items.push({value:d[f], label:d[f], desc: f})
                         })
                     })
+
                     // dereplicate
                     items_uniq = _.uniq(items, function(d){return d.value})
 

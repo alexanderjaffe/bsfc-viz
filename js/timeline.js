@@ -1,7 +1,7 @@
 /* Timeline to view BSFC product metrics.*/
 
 Timeline = function(_parentElement, _data, _eventHandler){
-    
+
     this.parentElement = _parentElement;
     this.data = _data;
     this.eventHandler = _eventHandler;
@@ -83,7 +83,7 @@ Timeline.prototype.wrangleData= function(pass){
     var filt_data;
 
     console.log(pass);
-    
+
     // if null, use all data, else filter
     if (pass!=null){
         if (pass.name=="All Items"){
@@ -102,27 +102,27 @@ Timeline.prototype.wrangleData= function(pass){
 
     // calculate summary metrics
     var revenue = 0;
-    var costs = 0;
+    var item_costs = 0;
     var units = 0;
+    var pif_usage = 0;
 
     filt_data.forEach(function(d){
-        revenue += d.sold*d.price;
-        costs += d.sold*d.item_cost;
+        revenue += (d.sold - d.member_discount_applied - d.misc_discount_applied)*d.price;
+        pif_usage = Math.abs(d.pif_discount_applied)*d.price
+        // take into account units from all sources
+        item_costs += (d.sold + d.store_use + d.food_prep + d.committee)*d.item_cost;
         units += d.sold;
+        //store_use_cost += d.store_use*
     })
 
     //send back to index, convert to $
-    pass = {rev: revenue/100, cts: costs/100, uts:units}
+    pass = {rev: revenue, cts: item_costs/100, uts:units, p:pif_usage}
     $(this.eventHandler).trigger("statsChanged", pass);
 
     // use that data to look at totals by day
     var nested_data = d3.nest().key(function(d){return d.new_date})
         .rollup(function(d){return d3.sum(d, function(g){return g.sold})})
         .entries(filt_data)
-
-
-    test = _.sortBy(filt_data, 'price' )
-    console.log(test.reverse()[0])
 
     // reformat date
     this.intData= nested_data.map(function(d){
@@ -163,7 +163,7 @@ Timeline.prototype.updateVis = function(){
 
     var that = this;
 
-    // from here down, adapted from CS171 section 6 
+    // from here down, adapted from CS171 section 6
     this.x.domain(d3.extent(this.displayData, function(d) { return d.time; }));
     this.y.domain(d3.extent(this.displayData, function(d) { return d.count; }));
 

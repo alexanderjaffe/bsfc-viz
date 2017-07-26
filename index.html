@@ -6,17 +6,18 @@
 
     <!-- ADD Libraries-->
     <script src="libs/d3/d3.min.js" charset="utf-8"></script>
-          <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+        <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
          rel = "stylesheet">
       <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
       <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/queue.v1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
-    
+
     <!--Stylesheets-->
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
-    
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+
     <!-- Get some nice font-->
     <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
 
@@ -120,8 +121,12 @@
                     time_vis.onZoomChange(pass);
                     //tree_map.onSelectionChange(pass);
                 });
+                $(MyEventHandler).bind("dateChanged", function(event, pass){
+                    console.log(pass)
+                });
                 $(MyEventHandler).bind("statsChanged", function(event, pass){
-                    
+
+                    console.log(pass.p)
                     // update stats
                     d3.select("#units").html("<b>Units: </b>" + num(pass.uts))
                     d3.select("#revenue").html("<b>Revenue: </b>" + usd(pass.rev))
@@ -135,19 +140,19 @@
 
                 // add in visualizations
                 var time_vis = new Timeline(d3.select("#timeVis"), allData, MyEventHandler);
-                //var time_select = new Timeselect(d3.select("#timeSelect"), allData, MyEventHandler);
+                var time_select = new Timeselect(d3.select("#timeSelect"), allData, MyEventHandler);
                 var tree_map = new Treemap(d3.select("#catVis"), allData, MyEventHandler);
 
             }
 
             // call this function after both files are loaded
             // could apply data transformations here
-            var dataLoaded = function (error, clover_data,test_data) {
+            var dataLoaded = function (error, clover_data) {
 
                 if (!error) {
-                    
+
                     allData = clover_data;
-                    console.log(allData)
+                    //console.log(allData)
 
                     // get all product, cat names
                     items = []
@@ -159,6 +164,7 @@
                     })
                     // dereplicate
                     items_uniq = _.uniq(items, function(d){return d.value})
+
 
                     // now initialize search bar
                     $( "#autocomplete-1" ).autocomplete({
@@ -172,13 +178,12 @@
                         $(MyEventHandler).trigger("zoomChanged", pass)
                         }
                     })
-
                     // format list entries
                     .data( "ui-autocomplete" )._renderItem = function( ul, item ) {
                         return $( "<li>" )
                        .append( "<a><span style='font-size:12px'>" + item.label + " " + "</span><span style='color:" + colors[item.desc] + ";font-size:10px'>" + labs[item.desc] + "</span></a>")
                        .appendTo( ul );
-                }
+                     }
 
                 initVis();
                 }
@@ -189,8 +194,7 @@
                 // load datasets with queue.js
                 queue()
                     .defer(d3.json, 'data/items.json')
-                    .defer(d3.json, "data/perDayData.json")
-                    .await(function(error,file1,file2){dataLoaded(error,file1,file2)});
+                    .await(function(error,file1,file2){dataLoaded(error,file1)});
                 }
 
                 /* define button behaviors

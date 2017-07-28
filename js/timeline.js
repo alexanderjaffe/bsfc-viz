@@ -11,6 +11,10 @@ Timeline = function(_parentElement, _data, _eventHandler){
     this.width = window.innerWidth - this.margin.left - this.margin.right,
     this.height = window.innerHeight/3 - this.margin.top - this.margin.bottom;
 
+    // define global filters
+    this.previous_time_filter;
+    this.previous_product_filter;
+
     this.initVis();
 }
 
@@ -70,34 +74,48 @@ Timeline.prototype.initVis = function(){
         .text("Units/sales");
 
     // filter, aggregate, modify data
-    this.wrangleData(null);
+    this.wrangleData(null, null);
 
     // call the up method
     this.updateVis();
 
 }
 
-Timeline.prototype.wrangleData= function(pass){
+Timeline.prototype.wrangleData= function(product, time){
+
+    console.log(product)
+    console.log(time)
 
     var that = this;
     var filt_data;
 
-    console.log(pass);
-
-    // if null, use all data, else filter
-    if (pass!=null){
-        if (pass.name=="All Items"){
-            filt_data = this.data
-        }
-        else {
-            filt_data = this.data.filter(function(d){
-                if (d[pass.type]==pass.name){
+    // filter by time and product
+    if (product !=null || time !=null){
+        //filter by time first
+        if (time != null){
+            console.log(this.data)
+            int_data = this.data.filter(function(d){
+                if (that.df.parse(d.new_date) <= time.end && that.df.parse(d.new_date) >= time.start){
                     return true
                 }
                 else {return false}
             })
         }
+        else {int_data = this.data}
+
+        if (product == null || product.name == "All Items"){
+            filt_data = int_data
+        }
+        else {
+            // then filter by product
+            filt_data = int_data.filter(function(d){
+                if (d[product.type]==product.name){
+                    return true
+                }
+                else {return false}})
+        }
     }
+    // if both null
     else {filt_data = this.data}
 
     // calculate summary metrics
@@ -223,8 +241,18 @@ Timeline.prototype.updateVis = function(){
 
 Timeline.prototype.onZoomChange= function (pass){
 
-    this.wrangleData(pass);
+    // update global
+    this.previous_product_filter = pass;
+    this.wrangleData(pass, this.previous_time_filter);
+    this.updateVis();
 
+}
+
+Timeline.prototype.onDateChange= function (pass){
+
+    // update global
+    this.previous_time_filter = pass;
+    this.wrangleData(this.previous_product_filter, pass);
     this.updateVis();
 
 }

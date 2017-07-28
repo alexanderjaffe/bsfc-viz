@@ -33,9 +33,13 @@
     <div>
         <div style='margin-top:0px;margin-left:50px;margin-right:20px;'>
         <h1>BSFC Discovery Platform</h1>
-        <div class = "ui-widget">
+        <div class="row">
+        <div class="col-md-4" class = "ui-widget">
          <label style="font-size:12px" for = "autocomplete-1">Search for product, brand, or category: </label>
          <input style="font-size:12px" id = "autocomplete-1">
+        </div>
+        <div class="col-md-8" id="ticker">
+        </div>
         </div>
       </div>
         <!-- <div class="row">
@@ -105,11 +109,14 @@
             var allData = [];
             var testData;
             var MyEventHandler;
-            var dateFormatter = d3.time.format("%Y-%m-%d");
+            var df = d3.time.format("%Y-%m-%d");
+            var df2 = d3.time.format("%a %b %d %Y")
             var usd = d3.format("$,.2f")
             var num = d3.format(",.2f")
             var colors = {"key":"black", "brand":"green", "sub_cat":"blue", "new_cat":"red"}
             var labs = {"key":"", "brand":"brand", "sub_cat":"subcategory", "new_cat":"category"}
+            var product = "All Items"
+            var time_range = {};
 
             // call this function after Data is loaded
             var initVis = function(){
@@ -120,13 +127,16 @@
                 $(MyEventHandler).bind("zoomChanged", function(event, pass){
                     time_vis.onZoomChange(pass);
                     //tree_map.onSelectionChange(pass);
+                    product = pass.name
+                    d3.select("#ticker").html("<b>sales of " + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
                 });
                 $(MyEventHandler).bind("dateChanged", function(event, pass){
-                    console.log(pass)
+                    time_vis.onDateChange(pass);
+                    time_range = pass
+                    d3.select("#ticker").html("<b>sales of " + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
                 });
                 $(MyEventHandler).bind("statsChanged", function(event, pass){
 
-                    console.log(pass.p)
                     // update stats
                     d3.select("#units").html("<b>Units: </b>" + num(pass.uts))
                     d3.select("#revenue").html("<b>Revenue: </b>" + usd(pass.rev))
@@ -165,6 +175,9 @@
                     // dereplicate
                     items_uniq = _.uniq(items, function(d){return d.value})
 
+                    // get date range
+                    time_range["start"] = d3.extent(allData.map(function(d){return df.parse(d.new_date)}))[0]
+                    time_range["end"] = d3.extent(allData.map(function(d){return df.parse(d.new_date)}))[1]
 
                     // now initialize search bar
                     $( "#autocomplete-1" ).autocomplete({

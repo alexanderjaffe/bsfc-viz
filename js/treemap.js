@@ -2,7 +2,7 @@
 http://bl.ocks.org/ganeshv/6a8e9ada3ab7f2d88022*/
 
 Treemap = function(_parentElement, _data, _eventHandler){
-    
+
     this.parentElement = _parentElement;
     this.data = _data;
     this.displayData = [];
@@ -28,17 +28,17 @@ Treemap.prototype.initVis =  function () {
   theight = 36 + 16
   this.transitioning;
   this.reverse_dict = {}
-  
+
   this.color = d3.scale.category20c();
-  
+
   this.x = d3.scale.linear()
       .domain([0, that.width])
       .range([0, that.width]);
-  
+
   this.y = d3.scale.linear()
       .domain([0, that.height])
       .range([0, that.height]);
-  
+
   this.treemap = d3.layout.treemap()
       .children(function(d, depth) { return depth ? null : d._children; })
       .sort(function(a, b) { return a.value - b.value; })
@@ -53,15 +53,15 @@ Treemap.prototype.initVis =  function () {
       .append("g")
       .attr("transform", "translate(" + that.margin.left + "," + that.margin.top + ")")
       .style("shape-rendering", "crispEdges");
-  
+
   this.grandparent = this.svg.append("g")
       .attr("class", "grandparent");
-  
+
   this.grandparent.append("rect")
       .attr("y", - that.margin.top)
       .attr("width", that.width)
       .attr("height", that.margin.top);
-  
+
   this.grandparent.append("text")
       .attr("x", 6)
       .attr("y", 6 - that.margin.top)
@@ -74,7 +74,7 @@ Treemap.prototype.initVis =  function () {
 }
 
 Treemap.prototype.wrangleData = function(){
-  
+
   var that = this;
 
   // create reverse mapping dict: type:name
@@ -82,11 +82,11 @@ Treemap.prototype.wrangleData = function(){
 
     fields = ["key", "brand", "sub_cat", "new_cat"]
     fields.forEach(function(f){
-      that.reverse_dict[d[f]] = f 
+      that.reverse_dict[d[f]] = f
     })
   })
 
-  // nest the data and combine across dates        
+  // nest the data and combine across dates
   var data_nest = d3.nest().key(function(d){return d.new_cat})
     .key(function(d){return d.sub_cat}).key(function(d){return d.brand})
     .key(function(d){return d.key})
@@ -114,7 +114,7 @@ Treemap.prototype.wrangleData = function(){
           k.values.forEach(function(j){
             j.values.forEach(function(l){
               d.values.push(l)})})}})
-      d.values.splice(index, 1)}}) 
+      d.values.splice(index, 1)}})
 
   this.root = {key: "All Items", values: data_nest};
   this.title = {title: "BSFC sales data"};
@@ -122,10 +122,10 @@ Treemap.prototype.wrangleData = function(){
 }
 
 Treemap.prototype.next = function(){
-  
+
   var that = this;
   root = this.root
-    
+
   initialize(root);
   accumulate(root);
   layout(root);
@@ -155,7 +155,7 @@ Treemap.prototype.next = function(){
   // the parent’s dimensions are not discarded as we recurse. Since each group
   // of sibling was laid out in 1×1, we must rescale to fit using absolute
   // coordinates. This lets us use a viewport to zoom.
-  
+
   function layout(d) {
     if (d._children) {
       that.treemap.nodes({_children: d._children});
@@ -171,7 +171,7 @@ Treemap.prototype.next = function(){
   }
 
   function display(d) {
-    
+
     that.grandparent
       .datum(d.parent)
       .on("click", function(d){
@@ -209,7 +209,7 @@ Treemap.prototype.next = function(){
       .on("mouseout", function(d){d3.select(this).style("fill",function(d){return that.color(d.key);})})
       .append("title")
       .text(function(d) { return d.key + " (" + that.format(d.value) + ")"; });
-    
+
     // add in text for deeper nodes
     /*children.append("text")
       .attr("class", "ctext")
@@ -235,7 +235,7 @@ Treemap.prototype.next = function(){
         .style("fill", function(d) { return that.color(d.key); });
 
     function transition(d) {
-      
+
       if (that.transitioning || !d) return;
       that.transitioning = true;
 

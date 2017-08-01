@@ -123,19 +123,31 @@ Timeline.prototype.wrangleData= function(product, time){
     var item_costs = 0;
     var units = 0;
     var pif_usage = 0;
+    var spoilage = 0;
+    var store_use = 0;
+    var food_prep = 0;
+    var comm_use = 0;
 
     filt_data.forEach(function(d){
         revenue += (d.sold - d.member_discount_applied - d.misc_discount_applied)*d.price;
         pif_usage = Math.abs(d.pif_discount_applied)*d.price
+        // unit differential
+        cost = d.item_cost/100
         // take into account units from all sources
-        item_costs += (d.sold + d.store_use + d.food_prep + d.committee)*d.item_cost;
+        item_costs += (d.sold + d.store_use + d.food_prep + d.committee + d.spoilage)*cost;
         units += d.sold;
-        //store_use_cost += d.store_use*
+        // individual metrics
+        store_use += d.store_use*cost
+        spoilage += d.spoilage*cost
+        comm_use += d.committee*cost
+        food_prep += d.food_prep*cost
     })
 
     //send back to index, convert to $
-    pass = {rev: revenue, cts: item_costs/100, uts:units, p:pif_usage}
+    pass = {rev: revenue,cts:item_costs,uts:units,spo:spoilage,st:store_use,co:comm_use,fp:food_prep,p:pif_usage}
     $(this.eventHandler).trigger("statsChanged", pass);
+
+    console.log(filt_data)
 
     // use that data to look at totals by day
     var nested_data = d3.nest().key(function(d){return d.new_date})

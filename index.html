@@ -86,9 +86,19 @@
         </div>
         <div class = "row" style='margin-left:50px;margin-right:50px;font-size:16px;border: 2px solid lightgray; padding:15px'>
             <div class="col-md-3" id="units">Total units: </div>
-            <div class="col-md-3" id="revenue">Revenue: </div>
-            <div class="col-md-3" id="costs">Costs: </div>
-            <div class="col-md-3" id="net">Net: </div>
+            <div class="col-md-3">
+                <div id="spoilage">Spoilage: </div>
+                <div id="fp">Food Prep: </div>
+            </div>
+            <div class="col-md-3">
+                <div id="comm_use">Committee Use: </div>
+                <div id="store_use">Store Use: </div>
+            </div>
+            <div class="col-md-3">
+                <div id="revenue">Revenue: </div>
+                <div id="costs">Total Costs: </div>
+                <div id="net">Net: </div>
+            </div>
         </div>
         <!--<div class="container">
             <div class="row">
@@ -137,10 +147,16 @@
                 });
                 $(MyEventHandler).bind("statsChanged", function(event, pass){
 
+                    console.log(pass.fp)
+
                     // update stats
                     d3.select("#units").html("<b>Units: </b>" + num(pass.uts))
                     d3.select("#revenue").html("<b>Revenue: </b>" + usd(pass.rev))
                     d3.select("#costs").html("<b>Costs: </b>" + usd(pass.cts))
+                    d3.select("#spoilage").html("<b>Spoilage: </b>" + usd(pass.spo))
+                    d3.select("#store_use").html("<b>Store Use: </b>" + usd(pass.st))
+                    d3.select("#comm_use").html("<b>Committee Use: </b>" + usd(pass.co))
+                    d3.select("#fp").html("<b>Food Prep: </b>" + usd(pass.fp))
                     var net = pass.rev - pass.cts
                     var color = (net > 0) ? "green" : "red"
                     text = "<b>Net: " + "<span style='color:" + color + "'> " + usd(net) + "</span></b>"

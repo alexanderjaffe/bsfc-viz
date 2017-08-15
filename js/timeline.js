@@ -14,6 +14,8 @@ Timeline = function(_parentElement, _data, _eventHandler){
     // define global filters
     this.previous_time_filter;
     this.previous_product_filter;
+    // default to sold
+    this.previous_type_filter = "sold";
 
     this.initVis();
 }
@@ -74,17 +76,14 @@ Timeline.prototype.initVis = function(){
         .text("Units/sales");
 
     // filter, aggregate, modify data
-    this.wrangleData(null, null);
+    this.wrangleData(null, null, this.previous_type_filter);
 
     // call the up method
     this.updateVis();
 
 }
 
-Timeline.prototype.wrangleData= function(product, time){
-
-    console.log(product)
-    console.log(time)
+Timeline.prototype.wrangleData= function(product, time, display_type){
 
     var that = this;
     var filt_data;
@@ -94,6 +93,7 @@ Timeline.prototype.wrangleData= function(product, time){
         //filter by time first
         if (time != null){
             console.log(this.data)
+            console.log(time.start)
             int_data = this.data.filter(function(d){
                 if (that.df.parse(d.new_date) <= time.end && that.df.parse(d.new_date) >= time.start){
                     return true
@@ -108,6 +108,7 @@ Timeline.prototype.wrangleData= function(product, time){
         }
         else {
             // then filter by product
+            // TODO NEEDS MORE SPECIFICITY
             filt_data = int_data.filter(function(d){
                 if (d[product.type]==product.name){
                     return true
@@ -118,6 +119,8 @@ Timeline.prototype.wrangleData= function(product, time){
     // if both null
     else {filt_data = this.data}
 
+    console.log(filt_data)
+
     // calculate summary metrics
     var revenue = 0;
     var item_costs = 0;
@@ -127,31 +130,35 @@ Timeline.prototype.wrangleData= function(product, time){
     var store_use = 0;
     var food_prep = 0;
     var comm_use = 0;
+    var mem_disc = 0;
+    var misc_disc = 0;
 
     filt_data.forEach(function(d){
+
         revenue += (d.sold - d.member_discount_applied - d.misc_discount_applied)*d.price;
-        pif_usage = Math.abs(d.pif_discount_applied)*d.price
         // unit differential
         cost = d.item_cost/100
         // take into account units from all sources
         item_costs += (d.sold + d.store_use + d.food_prep + d.committee + d.spoilage)*cost;
-        units += d.sold;
+        units += d[display_type];
         // individual metrics
         store_use += d.store_use*cost
         spoilage += d.spoilage*cost
         comm_use += d.committee*cost
         food_prep += d.food_prep*cost
+        // discounts
+        pif_usage += Math.abs(d.pif_discount_applied)*d.price
+        mem_disc += d.member_discount_applied*d.price
+        misc_disc += d.misc_discount_applied*d.price
     })
 
     //send back to index, convert to $
-    pass = {rev: revenue,cts:item_costs,uts:units,spo:spoilage,st:store_use,co:comm_use,fp:food_prep,p:pif_usage}
+    pass = {rev: revenue,cts:item_costs,uts:units,spo:spoilage,st:store_use,co:comm_use,fp:food_prep,pif:pif_usage, memb:mem_disc, misc:misc_disc}
     $(this.eventHandler).trigger("statsChanged", pass);
-
-    console.log(filt_data)
 
     // use that data to look at totals by day
     var nested_data = d3.nest().key(function(d){return d.new_date})
-        .rollup(function(d){return d3.sum(d, function(g){return g.sold})})
+        .rollup(function(d){return d3.sum(d, function(g){return g[display_type]})})
         .entries(filt_data)
 
     // reformat date
@@ -255,7 +262,7 @@ Timeline.prototype.onZoomChange= function (pass){
 
     // update global
     this.previous_product_filter = pass;
-    this.wrangleData(pass, this.previous_time_filter);
+    this.wrangleData(pass, this.previous_time_filter, this.previous_type_filter);
     this.updateVis();
 
 }
@@ -264,7 +271,16 @@ Timeline.prototype.onDateChange= function (pass){
 
     // update global
     this.previous_time_filter = pass;
-    this.wrangleData(this.previous_product_filter, pass);
+    this.wrangleData(this.previous_product_filter, pass, this.previous_type_filter);
+    this.updateVis();
+
+}
+
+Timeline.prototype.onTypeChange= function (pass){
+
+    // update global
+    this.previous_type_filter = pass;
+    this.wrangleData(this.previous_product_filter, this.previous_time_filter, pass);
     this.updateVis();
 
 }

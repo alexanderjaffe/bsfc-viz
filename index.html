@@ -42,36 +42,6 @@
         </div>
         </div>
       </div>
-        <!-- <div class="row">
-            <div class="col-md-3" id = "order">
-              <form>
-              Order:
-                <select>
-                  <option value="sort" selected >sort by name</option>
-                  <option value="hclust">cluster</option>
-                </select>
-              </form>
-            </div>
-            <div class="col-md-3" id = "data_type">
-              <form>
-              Data Type:
-                <select>
-                  <option value="quant" selected >Quantitative</option>
-                  <option value="bin">Binary</option>
-                </select>
-              </form>
-            </div>
-        </div> -->
-        <!--<div class="row">
-            <div class="col-md-8 col-sm-12">
-               <p> info info info</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4" style = "width:300px">
-                <b>current selection:</b> <span id="brushInfo"></span>
-            </div>
-        </div> -->
         <div class="row">
             <div class="col-md-6" id="timeVis">
             </div>
@@ -84,21 +54,24 @@
             <div class="col-md-12" id="catVis">
             </div>
         </div>
-        <div class = "row" style='margin-left:50px;margin-right:50px;font-size:16px;border: 2px solid lightgray; padding:15px'>
-            <div class="col-md-3" id="units">Total units: </div>
+        <div class = "row" style='margin-left:50px;margin-right:50px;font-size:16px;border: 2px solid lightgray; padding:10px'>
             <div class="col-md-3">
-                <div id="spoilage">Spoilage: </div>
-                <div id="fp">Food Prep: </div>
-            </div>
-            <div class="col-md-3">
-                <div id="comm_use">Committee Use: </div>
-                <div id="store_use">Store Use: </div>
-            </div>
-            <div class="col-md-3">
-                <div id="revenue">Revenue: </div>
+                <div id="sold">Revenue: </div>
                 <div id="costs">Total Costs: </div>
                 <div id="net">Net: </div>
             </div>
+            <div class="col-md-3">
+                <div id="spoilage">Spoilage: </div>
+                <div id="food_prep">Food Prep: </div>
+                <div id="committee">Committee Use: </div>
+                <div id="store_use">Store Use: </div>
+            </div>
+            <div class="col-md-3">
+                <div id="member_discount_applied">Member Discount Applied: </div>
+                <div id="misc_discount_applied">Misc. Discount Applied: </div>
+                <div id="pif_discount_applied">PIF Discount Applied:</div>
+            </div>
+            <div class="col-md-3" id="units">Total units displayed: </div>
         </div>
         <!--<div class="container">
             <div class="row">
@@ -125,8 +98,10 @@
             var num = d3.format(",.2f")
             var colors = {"key":"black", "brand":"green", "sub_cat":"blue", "new_cat":"red"}
             var labs = {"key":"", "brand":"brand", "sub_cat":"subcategory", "new_cat":"category"}
+            var types = {"sold":"sales of ", "member_discount_applied": "member discount applied to ", "misc_discount_applied": "miscellaneous discount applied to ", "pif_discount_applied": "pay-it-forward discount applied to ", "food_prep": "food prep usage of ", "spoilage":"spoilage of ","committee": "committee usage of ", "store_use": "store usage of "}
             var product = "All Items"
             var time_range = {};
+            var display_type = "sold"
 
             // call this function after Data is loaded
             var initVis = function(){
@@ -138,25 +113,33 @@
                     time_vis.onZoomChange(pass);
                     //tree_map.onSelectionChange(pass);
                     product = pass.name
-                    d3.select("#ticker").html("<b>sales of " + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
+                    d3.select("#ticker").html("<b>" + types[display_type] + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
                 });
                 $(MyEventHandler).bind("dateChanged", function(event, pass){
                     time_vis.onDateChange(pass);
                     time_range = pass
-                    d3.select("#ticker").html("<b>sales of " + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
+                    d3.select("#ticker").html("<b>" + types[display_type] + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
+                });
+                $(MyEventHandler).bind("displayTypeChanged", function(event, pass){
+                    time_vis.onTypeChange(pass);
+                    display_type = pass;
+                    d3.select("#ticker").html("<b>" + types[display_type] + product + "</b> from " + df2(time_range["start"]) + " to " + df2(time_range["end"]))
                 });
                 $(MyEventHandler).bind("statsChanged", function(event, pass){
 
                     console.log(pass.fp)
 
                     // update stats
-                    d3.select("#units").html("<b>Units: </b>" + num(pass.uts))
-                    d3.select("#revenue").html("<b>Revenue: </b>" + usd(pass.rev))
+                    d3.select("#units").html("<b>Total units displayed: </b>" + num(pass.uts))
+                    d3.select("#sold").html("<b>Revenue: </b>" + usd(pass.rev))
                     d3.select("#costs").html("<b>Costs: </b>" + usd(pass.cts))
                     d3.select("#spoilage").html("<b>Spoilage: </b>" + usd(pass.spo))
                     d3.select("#store_use").html("<b>Store Use: </b>" + usd(pass.st))
-                    d3.select("#comm_use").html("<b>Committee Use: </b>" + usd(pass.co))
-                    d3.select("#fp").html("<b>Food Prep: </b>" + usd(pass.fp))
+                    d3.select("#committee").html("<b>Committee Use: </b>" + usd(pass.co))
+                    d3.select("#food_prep").html("<b>Food Prep: </b>" + usd(pass.fp))
+                    d3.select("#member_discount_applied").html("<b>Member Discount Applied: </b>" + usd(pass.memb))
+                    d3.select("#misc_discount_applied").html("<b>Misc. Discount Applied: </b>" + usd(pass.misc))
+                    d3.select("#pif_discount_applied").html("<b>PIF Discount Applied: </b>" + usd(pass.pif))
                     var net = pass.rev - pass.cts
                     var color = (net > 0) ? "green" : "red"
                     text = "<b>Net: " + "<span style='color:" + color + "'> " + usd(net) + "</span></b>"
@@ -226,17 +209,16 @@
                     .await(function(error,file1,file2){dataLoaded(error,file1)});
                 }
 
-                /* define button behaviors
-                d3.select("#order").select("select").on("change",function(){
-                    console.log("test")
-                    pass = {type:"order", value:this.value}
-                    $(MyEventHandler).trigger("selectionChanged", pass)
-                });
-                d3.select("#data_type").select("select").on("change",function(){
-                    console.log("toggle")
-                    pass = {type:"data_type", value:this.value}
-                    $(MyEventHandler).trigger("selectionChanged", pass)
-                }); */
+                // define button behaviors
+                buttons = ["spoilage", "food_prep", "sold", "committee", "member_discount_applied", "misc_discount_applied", "pif_discount_applied", "store_use"]
+                buttons.forEach(function(b){
+
+                    id = "#" + b
+                    d3.select(id)
+                        .on("mouseover", function(){d3.select(this).style("color", "red")})
+                        .on("mouseout", function(){d3.select(this).style("color", "black")})
+                        .on("click", function(){$(MyEventHandler).trigger("displayTypeChanged", b)})
+                })
 
                 startHere();
         })

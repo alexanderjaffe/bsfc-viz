@@ -94,6 +94,7 @@ def main():
     items_df["new_cat"] = items_df["category"].apply(lambda x: trim_category(str(x)))
     items_df["sub_cat"] = items_df["key"].apply(lambda x: assign_subcat(x, subcats))
     items_df["new_date"] = items_df.created_at.apply(midnight)
+
     # remove old fields
     items = items_df.drop(["id","created_at","name","category"], axis=1)
     # group and aggregate by item/date
@@ -103,42 +104,6 @@ def main():
         "member_discount_applied":"sum", "pif_discount_applied":"sum", "misc_discount_applied":"sum", \
         "new_cat":"first", "brand":"first", "sub_cat":"first"})
 
-    '''# TEMP - make fake data
-    # get unique combos
-    names = ["key","unit_name","price","sub_cat","new_cat","item_cost","price_type","brand"]
-    zipped = zip(items_grouped.key, items_grouped.unit_name, items_grouped.price, items_grouped["sub_cat"], \
-                 items_grouped["new_cat"],items_grouped["item_cost"],items_grouped["price_type"],items_grouped["brand"])
-    zuniq = list(set(zipped))
-
-    fake_data = []
-    start = 21
-
-    for i in range(1,40):
-        day = start + i
-        date = "2017-03-" + str(day)
-        if day > 31:
-            day = day % 31
-            date = "2017-04-" + str(day)
-
-        for item in zuniq:
-            temp = {}
-            for i in range(0,len(item)):
-                temp[names[i]] = item[i]
-            temp["new_date"] = date
-            temp["sold"] = random.choice([0]*20+[1]*4+[3]*2+[4]*3+[5]*2+[9]*2)
-            temp["spoilage"] = 0
-            temp["food_prep"] = 0
-            temp["store_use"] = 0
-            temp["committee"] = 0
-            temp["member_discount_applied"] = 0
-
-            fake_data.append(temp)
-
-    fake_df = pd.DataFrame(fake_data)
-    merged_items = pd.concat([items_grouped, fake_df])
-
-    # write to json
-    merged_items.to_json("data/items.json", orient="records")'''
     items_grouped.to_json("data/items.json", orient="records")
 
 if __name__ == '__main__':

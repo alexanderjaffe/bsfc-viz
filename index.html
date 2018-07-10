@@ -31,16 +31,24 @@
 </head>
 <body>
     <div>
-        <div style='margin-top:0px;margin-left:50px;margin-right:20px;'>
-        <h1>BSFC Discovery Platform</h1>
-        <div class="row">
-        <div class="col-md-4" class = "ui-widget">
-         <label style="font-size:12px" for = "autocomplete-1">Search for product, brand, or category: </label>
-         <input style="font-size:12px" id = "autocomplete-1">
-        </div>
-        <div class="col-md-8" id="ticker">
-        </div>
-        </div>
+        <div style='margin-top:10px;margin-left:50px;margin-right:20px;'>
+            <div class="row">
+            <div class="col-md-10"><h1>BSFC Discovery Platform</h1></div>
+            <div class="col-md-2" style="text-align:right">
+                <a style="font-size:10px" href="http://www.foodcollective.org/">home</a>
+                <span style="font-size:10px"> | </span>
+                <a style="font-size:10px" href="mailto:alexander_jaffe@berkeley.edu,klatimer@berkeley.edu">support</a>
+                <img src="http://static1.squarespace.com/static/55aa8e0ee4b09b833beecee2/t/564fca41e4b018da2a5a4bc9/1491486409237/" align="middle" alt="Mountain View" style="width:75px;height:75px;">
+            </div>
+            </div>
+            <div class="row">
+            <div class="col-md-4" class = "ui-widget">
+             <label style="font-size:12px" for = "autocomplete-1">Search for product, brand, or category: </label>
+             <input style="font-size:12px" id = "autocomplete-1">
+            </div>
+            <div class="col-md-8" id="ticker">
+            </div>
+            </div>
       </div>
         <div class="row">
             <div class="col-md-6" id="timeVis">
@@ -54,24 +62,52 @@
             <div class="col-md-12" id="catVis">
             </div>
         </div>
-        <div class = "row" style='margin-left:50px;margin-right:50px;font-size:16px;border: 2px solid lightgray; padding:10px'>
-            <div class="col-md-3">
-                <div id="sold">Revenue: </div>
-                <div id="costs">Total Costs: </div>
-                <div id="net">Net: </div>
+        <div class="row" style='margin-left:50px; font-size:10px'> click on a category to display</div>
+        <div>
+            <div class="col-md-6" style='margin-left:50px; margin-right:50px;font-size:14px;border: 2px solid lightgray; padding:10px'>
+                <div class="col-md-1">
+                    <b>
+                    <div id="units">Units: </div>
+                    <div id="sold">Revenue: </div>
+                    <div id="costs">Costs: </div>
+                    <div id="net">Net: </div>
+                    </b>
+                </div>
+                <div class="col-md-2" style="text-align:center">
+                    <div id="units_num"></div>
+                    <div id="sold_num"></div>
+                    <div id="costs_num"></div>
+                    <div id="net_num"></div>
+                </div>
+                <div class="col-md-2">
+                    <b>
+                    <div id="spoilage">Spoilage: </div>
+                    <div id="food_prep">Food Prep: </div>
+                    <div id="committee">Comm. Use: </div>
+                    <div id="store_use">Store Use: </div>
+                    </b>
+                </div>
+                <div class="col-md-2" style="text-align:center">
+                    <div id="spoilage_num"></div>
+                    <div id="food_prep_num"></div>
+                    <div id="committee_num"></div>
+                    <div id="store_use_num"></div>
+                </div>
+                <div class="col-md-3">
+                    <b>
+                    <div id="member_discount_applied">Member Discount Used: </div>
+                    <div id="misc_discount_applied">Misc. Discount Used: </div>
+                    <div id="pif_discount_applied">PIF Discount Used:</div>
+                    </b>
+                </div>
+                <div class="col-md-2">
+                    <div id="member_discount_applied_num"></div>
+                    <div id="misc_discount_applied_num"></div>
+                    <div id="pif_discount_applied_num"></div>
+                </div>
             </div>
             <div class="col-md-3">
-                <div id="spoilage">Spoilage: </div>
-                <div id="food_prep">Food Prep: </div>
-                <div id="committee">Committee Use: </div>
-                <div id="store_use">Store Use: </div>
             </div>
-            <div class="col-md-3">
-                <div id="member_discount_applied">Member Discount Applied: </div>
-                <div id="misc_discount_applied">Misc. Discount Applied: </div>
-                <div id="pif_discount_applied">PIF Discount Applied:</div>
-            </div>
-            <div class="col-md-3" id="units">Total units displayed: </div>
         </div>
         <!--<div class="container">
             <div class="row">
@@ -127,23 +163,23 @@
                 });
                 $(MyEventHandler).bind("statsChanged", function(event, pass){
 
-                    console.log(pass.fp)
+                    console.log(pass)
 
                     // update stats
-                    d3.select("#units").html("<b>Total units displayed: </b>" + num(pass.uts))
-                    d3.select("#sold").html("<b>Revenue: </b>" + usd(pass.rev))
-                    d3.select("#costs").html("<b>Costs: </b>" + usd(pass.cts))
-                    d3.select("#spoilage").html("<b>Spoilage: </b>" + usd(pass.spo))
-                    d3.select("#store_use").html("<b>Store Use: </b>" + usd(pass.st))
-                    d3.select("#committee").html("<b>Committee Use: </b>" + usd(pass.co))
-                    d3.select("#food_prep").html("<b>Food Prep: </b>" + usd(pass.fp))
-                    d3.select("#member_discount_applied").html("<b>Member Discount Applied: </b>" + usd(pass.memb))
-                    d3.select("#misc_discount_applied").html("<b>Misc. Discount Applied: </b>" + usd(pass.misc))
-                    d3.select("#pif_discount_applied").html("<b>PIF Discount Applied: </b>" + usd(pass.pif))
+                    d3.select("#units_num").html(num(pass.uts))
+                    d3.select("#sold_num").html(usd(pass.rev))
+                    d3.select("#costs_num").html(usd(pass.cts))
+                    d3.select("#spoilage_num").html(usd(pass.spo))
+                    d3.select("#store_use_num").html(usd(pass.st))
+                    d3.select("#committee_num").html(usd(pass.co))
+                    d3.select("#food_prep_num").html(usd(pass.fp))
+                    d3.select("#member_discount_applied_num").html(usd(pass.memb))
+                    d3.select("#misc_discount_applied_num").html(usd(pass.misc))
+                    d3.select("#pif_discount_applied_num").html(usd(pass.pif))
                     var net = pass.rev - pass.cts
                     var color = (net > 0) ? "green" : "red"
-                    text = "<b>Net: " + "<span style='color:" + color + "'> " + usd(net) + "</span></b>"
-                    d3.select("#net").html(text)
+                    text = "<span style='color:" + color + "'> " + usd(net) + "</span>"
+                    d3.select("#net_num").html(text)
 
                 });
 
@@ -161,7 +197,6 @@
                 if (!error) {
 
                     allData = clover_data;
-                    //console.log(allData)
 
                     // get all product, cat names
                     items = []
@@ -211,6 +246,7 @@
 
                 // define button behaviors
                 buttons = ["spoilage", "food_prep", "sold", "committee", "member_discount_applied", "misc_discount_applied", "pif_discount_applied", "store_use"]
+
                 buttons.forEach(function(b){
 
                     id = "#" + b

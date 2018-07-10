@@ -7,14 +7,14 @@ Treemap = function(_parentElement, _data, _eventHandler){
     this.data = _data;
     this.displayData = [];
     this.eventHandler = _eventHandler;
-    this.margin = {top: 20, right: 50, bottom: 30, left: 50},
+    this.margin = {top: 20, right: 50, bottom: 20, left: 50},
 
     // boot up the viz
     this.initVis();
 
 }
 
-/* Method that sets up the SVG and the variables */
+/** SET UP INTIAL VISUAL COMPONENTS **/
 Treemap.prototype.initVis =  function () {
 
   var that = this;
@@ -73,6 +73,7 @@ Treemap.prototype.initVis =  function () {
 
 }
 
+/** WRASSLE THEM DATAS **/
 Treemap.prototype.wrangleData = function(){
 
   var that = this;

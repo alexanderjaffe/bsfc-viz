@@ -14,12 +14,12 @@ Timeline = function(_parentElement, _data, _eventHandler){
     // define global filters
     this.previous_time_filter;
     this.previous_product_filter;
-    // default to sold
     this.previous_type_filter = "sold";
 
     this.initVis();
 }
 
+/** SET INITIAL VISUAL ELEMENTS **/
 Timeline.prototype.initVis = function(){
 
     var that = this;
@@ -83,12 +83,14 @@ Timeline.prototype.initVis = function(){
 
 }
 
+/** WRASSLE THEM DATAS **/
 Timeline.prototype.wrangleData= function(product, time, display_type){
 
     var that = this;
     var filt_data;
 
-    // filter by time and product
+    /** FILTER BY TIME AND PRODUCT **/
+
     if (product !=null || time !=null){
         //filter by time first
         if (time != null){
@@ -121,11 +123,14 @@ Timeline.prototype.wrangleData= function(product, time, display_type){
 
     console.log(filt_data)
 
-    // calculate summary metrics
+    // ** //
+
+    /** CALCULATE SUMMARY METRICS **/
+
     var revenue = 0;
+    var pif_usage = 0;
     var item_costs = 0;
     var units = 0;
-    var pif_usage = 0;
     var spoilage = 0;
     var store_use = 0;
     var food_prep = 0;
@@ -156,6 +161,10 @@ Timeline.prototype.wrangleData= function(product, time, display_type){
     pass = {rev: revenue,cts:item_costs,uts:units,spo:spoilage,st:store_use,co:comm_use,fp:food_prep,pif:pif_usage, memb:mem_disc, misc:misc_disc}
     $(this.eventHandler).trigger("statsChanged", pass);
 
+    // ** //
+
+    /** AGGREGATE, FORMAT, AND ZERO DATA **/
+
     // use that data to look at totals by day
     var nested_data = d3.nest().key(function(d){return d.new_date})
         .rollup(function(d){return d3.sum(d, function(g){return g[display_type]})})
@@ -173,7 +182,7 @@ Timeline.prototype.wrangleData= function(product, time, display_type){
         return res;
     })
 
-    // zero the data - ie, there's a point for every day
+    //zero the data- ie, there's a point for every day **/
     // generate date range
     var drange = d3.time.day.range(d3.min(that.intData, function(d){return that.df2.parse(d.time)}), d3.max(that.intData, function(d){return that.df2.parse(d.time)}))
     var zeroes = {}
@@ -194,17 +203,18 @@ Timeline.prototype.wrangleData= function(product, time, display_type){
     // IMPT to sort by date for path to render correctly
     this.displayData = _.sortBy(zeroed, 'time' )
 
+    //**//
+
 }
 
+/** DYNAMICALLY UPDATE VISUAL ELEMENTS **/
 Timeline.prototype.updateVis = function(){
 
     var that = this;
 
-    // from here down, adapted from CS171 section 6
+    // get data and date ranges
     this.x.domain(d3.extent(this.displayData, function(d) { return d.time; }));
     this.y.domain(d3.extent(this.displayData, function(d) { return d.count; }));
-
-    //console.log(d3.extent(this.displayData, function(d) { return d.time; }));
 
     // updates axis
     this.svg.select(".x.axis")
@@ -217,7 +227,7 @@ Timeline.prototype.updateVis = function(){
     // updates graph
     var path = this.svg.selectAll(".area")
     //var path = this.svg.selectAll(".line")
-      .data([this.displayData])
+        .data([this.displayData])
 
     path.enter()
       .append("path")
@@ -258,9 +268,11 @@ Timeline.prototype.updateVis = function(){
 
 }
 
+/** TRANSITION FUNCTIONS **/
+
 Timeline.prototype.onZoomChange= function (pass){
 
-    // update global
+    // update product global
     this.previous_product_filter = pass;
     this.wrangleData(pass, this.previous_time_filter, this.previous_type_filter);
     this.updateVis();
@@ -269,7 +281,7 @@ Timeline.prototype.onZoomChange= function (pass){
 
 Timeline.prototype.onDateChange= function (pass){
 
-    // update global
+    // update date global
     this.previous_time_filter = pass;
     this.wrangleData(this.previous_product_filter, pass, this.previous_type_filter);
     this.updateVis();
@@ -278,7 +290,7 @@ Timeline.prototype.onDateChange= function (pass){
 
 Timeline.prototype.onTypeChange= function (pass){
 
-    // update global
+    // update type global
     this.previous_type_filter = pass;
     this.wrangleData(this.previous_product_filter, this.previous_time_filter, pass);
     this.updateVis();
